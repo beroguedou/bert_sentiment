@@ -1,12 +1,12 @@
-import config
 import torch
+import transformers
 
 class BERTDataset():
     def __init__(self, review, target):
         self.review = review
         self.target = target
-        self.tokenizer = config.TOKENIZER
-        self.max_len = config.MAX_LEN
+        self.tokenizer = transformers.BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
+        self.max_len = 512
         
     def __len__(self):
         return len(self.review)

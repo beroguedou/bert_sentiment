@@ -1,4 +1,3 @@
-import config
 import transformers
 import torch.nn as nn
 

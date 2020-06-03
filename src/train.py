@@ -1,4 +1,3 @@
-import config
 import torch
 import dataset
 import engine
@@ -14,8 +13,9 @@ from transformers import get_linear_schedule_with_warmup
 
 
 
-def run(opt_level="O2", keep_batchnorm_fp32=True, batch_size=5, nb_epochs=10, data_path="../inputs/IMDB_Dataset.csv"):
-    #df = pd.read_csv(config.TRAINING_FILE).fillna("none")[0:100] # Essai pour ne pas prendre trop de temps
+def run(opt_level="O2", keep_batchnorm_fp32=True, batch_size=5,
+        nb_epochs=10, data_path="../inputs/IMDB_Dataset.csv"):
+    
     df = pd.read_csv(data_path).fillna("none")[0:100]
     df.sentiment = df.sentiment.apply(lambda x: 1 if x == "positive" else 0)
     
@@ -40,14 +40,14 @@ def run(opt_level="O2", keep_batchnorm_fp32=True, batch_size=5, nb_epochs=10, da
     # Creating the dataloaders
     train_dataloader = torch.utils.data.DataLoader(
         train_dataset,
-        batch_size,#=config.TRAIN_BATCH_SIZE,
+        batch_size,
         num_workers=10,
         drop_last=True
     )
     
     valid_dataloader = torch.utils.data.DataLoader(
         valid_dataset,
-        batch_size,#=config.VALID_BATCH_SIZE,
+        batch_size,
         num_workers=10,
         drop_last=True
     )    
@@ -60,15 +60,12 @@ def run(opt_level="O2", keep_batchnorm_fp32=True, batch_size=5, nb_epochs=10, da
     no_decay = ["bias", "LayerNorm.bias", "LayerNorm.weight"] # We don't want any decay for them
     optimizer_parameters = [
     {"params": [p for n, p in parameters if not any(nd in n for nd in no_decay)], "weight_decay": 0.001},
-    {"params": [p for n, p in parameters if any(nd in n for nd in no_decay)], "weight_decay": 0.0}
-    ] 
-    #nb_epochs = config.EPOCHS
-    num_train_steps = int(len(df_train) * nb_epochs / batch_size)#config.TRAIN_BATCH_SIZE)
+    {"params": [p for n, p in parameters if any(nd in n for nd in no_decay)], "weight_decay": 0.0}] 
+    
+    num_train_steps = int(len(df_train) * nb_epochs / batch_size)
     # Defining the optimizer and the scheduler
     optimizer = AdamW(optimizer_parameters, lr=3e-5)
- 
-    #model = nn.DataParallel(model) # If you have multi-gpus
-    # Initialize the pytorch model and the optimizer to allow mixed-precision training
+    # Initialize the pytorch model and the optimizer to allow automatic mixed-precision training
     model, optimizer = amp.initialize(model, optimizer, 
                                       opt_level=opt_level,
                                       keep_batchnorm_fp32=keep_batchnorm_fp32, 
