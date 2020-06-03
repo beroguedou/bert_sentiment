@@ -50,6 +50,7 @@ def global_trainer(train_dataloader, valid_dataloader, model, optimizer, schedul
                        bar_format="{l_bar}{bar:20}{r_bar}{bar:-15b}") as pbar:
             
         #
+            best_accuracy = 0
         
             for phase in ["train", "valid"]:
                 total_loss = 0
@@ -87,9 +88,12 @@ def global_trainer(train_dataloader, valid_dataloader, model, optimizer, schedul
                                                            phase,
                                                            optimizer,
                                                            scheduler)
+          
                         
                     total_loss += batch_loss
                     total_acc_score += score
+              
+                
           
                     if phase == 'train':
                         train_loss = total_loss / (batch + 1)
@@ -104,4 +108,13 @@ def global_trainer(train_dataloader, valid_dataloader, model, optimizer, schedul
                         pbar.set_postfix_str('Train loss {:.4f} Train Acc {:.4f} Val loss {:.4f} Val Acc {:.4f}' \
                                              .format(train_loss, train_acc, val_loss, val_acc))
                         time.sleep(1)  
+                    # Save the checkpoint with automatic mixed precision at the end of the epoch 
+                    if phase == "valid":
+                        if val_acc > best_accuracy:
+                            best_accuracy = val_acc
+                            checkpoint = {'model': model.state_dict(),
+                                          'optimizer': optimizer.state_dict(),
+                                          'amp': amp.state_dict()
+                                          }
+                            torch.save(checkpoint, 'amp_checkpoint.pt')
          

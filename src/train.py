@@ -14,7 +14,7 @@ from transformers import get_linear_schedule_with_warmup
 
 
 
-def run(opt_level="O2", batch_size=6, nb_epochs=10, data_path="../inputs/IMDB_Dataset.csv"):
+def run(opt_level="O2", keep_batchnorm_fp32=True, batch_size=5, nb_epochs=10, data_path="../inputs/IMDB_Dataset.csv"):
     #df = pd.read_csv(config.TRAINING_FILE).fillna("none")[0:100] # Essai pour ne pas prendre trop de temps
     df = pd.read_csv(data_path).fillna("none")[0:100]
     df.sentiment = df.sentiment.apply(lambda x: 1 if x == "positive" else 0)
@@ -71,7 +71,7 @@ def run(opt_level="O2", batch_size=6, nb_epochs=10, data_path="../inputs/IMDB_Da
     # Initialize the pytorch model and the optimizer to allow mixed-precision training
     model, optimizer = amp.initialize(model, optimizer, 
                                       opt_level=opt_level,
-                                      keep_batchnorm_fp32=True, 
+                                      keep_batchnorm_fp32=keep_batchnorm_fp32, 
                                       loss_scale="dynamic")
     
     scheduler = get_linear_schedule_with_warmup(
@@ -80,8 +80,6 @@ def run(opt_level="O2", batch_size=6, nb_epochs=10, data_path="../inputs/IMDB_Da
         num_training_steps=num_train_steps
     )
     
-    
-    best_accuracy = 0
     # Train the model
     engine.global_trainer(train_dataloader, valid_dataloader, model, optimizer, scheduler, device, nb_epochs)
     
