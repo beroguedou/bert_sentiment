@@ -14,9 +14,9 @@ from transformers import get_linear_schedule_with_warmup
 
 
 
-
-def run(opt_level="O2"):
-    df = pd.read_csv(config.TRAINING_FILE).fillna("none")[0:100] # Essai pour ne pas prendre trop de temps
+def run(opt_level="O2", batch_size=6, nb_epochs=10, data_path="../inputs/IMDB_Dataset.csv"):
+    #df = pd.read_csv(config.TRAINING_FILE).fillna("none")[0:100] # Essai pour ne pas prendre trop de temps
+    df = pd.read_csv(data_path).fillna("none")[0:100]
     df.sentiment = df.sentiment.apply(lambda x: 1 if x == "positive" else 0)
     
     df_train, df_valid = model_selection.train_test_split(
@@ -40,14 +40,16 @@ def run(opt_level="O2"):
     # Creating the dataloaders
     train_dataloader = torch.utils.data.DataLoader(
         train_dataset,
-        batch_size=config.TRAIN_BATCH_SIZE,
-        num_workers=10
+        batch_size,#=config.TRAIN_BATCH_SIZE,
+        num_workers=10,
+        drop_last=True
     )
     
     valid_dataloader = torch.utils.data.DataLoader(
         valid_dataset,
-        batch_size=config.VALID_BATCH_SIZE,
-        num_workers=10
+        batch_size,#=config.VALID_BATCH_SIZE,
+        num_workers=10,
+        drop_last=True
     )    
     # Defining the model and sending to the device
     device = torch.device("cuda")
@@ -60,8 +62,8 @@ def run(opt_level="O2"):
     {"params": [p for n, p in parameters if not any(nd in n for nd in no_decay)], "weight_decay": 0.001},
     {"params": [p for n, p in parameters if any(nd in n for nd in no_decay)], "weight_decay": 0.0}
     ] 
-    nb_epochs = config.EPOCHS
-    num_train_steps = int(len(df_train) * nb_epochs / config.TRAIN_BATCH_SIZE)
+    #nb_epochs = config.EPOCHS
+    num_train_steps = int(len(df_train) * nb_epochs / batch_size)#config.TRAIN_BATCH_SIZE)
     # Defining the optimizer and the scheduler
     optimizer = AdamW(optimizer_parameters, lr=3e-5)
  
