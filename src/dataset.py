@@ -1,6 +1,7 @@
 import torch
 import transformers
 
+
 class BERTDataset():
     def __init__(self, review, target):
         self.review = review

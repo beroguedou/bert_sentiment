@@ -1,3 +1,4 @@
+import os
 import tqdm
 import sys
 import time
@@ -41,7 +42,7 @@ def train_step(ids, mask, token_type_ids, targets, model, phase, optimizer, sche
     return batch_loss, score
 
             
-def global_trainer(train_dataloader, valid_dataloader, model, optimizer, scheduler, device, nb_epochs):
+def global_trainer(train_dataloader, valid_dataloader, model, optimizer, scheduler, device, nb_epochs, model_path):
     
     # For each epoch
     for epoch in range(nb_epochs):
@@ -116,5 +117,6 @@ def global_trainer(train_dataloader, valid_dataloader, model, optimizer, schedul
                                           'optimizer': optimizer.state_dict(),
                                           'amp': amp.state_dict()
                                           }
-                            torch.save(checkpoint, 'amp_checkpoint.pt')
+                            path = os.path.join(model_path, 'amp_checkpoint.pt')
+                            torch.save(checkpoint, path)
          

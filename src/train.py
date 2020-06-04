@@ -1,6 +1,7 @@
 import torch
 import dataset
 import engine
+import argparse
 import numpy as np
 import pandas as pd
 import torch.nn as nn
@@ -12,9 +13,17 @@ from transformers import AdamW
 from transformers import get_linear_schedule_with_warmup
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument("-o","--opt_level", help="Define the optimization level", default="O2")
+parser.add_argument("-k", "--keep_batchnorm_fp32", help="Tells to keep batchnorm in FP32 or Note", default=True)
+parser.add_argument("-b", "--batch_size", type=int, help="The batch size for the training.", default=5)
+parser.add_argument("-e", "--nb_epochs", type=int, help="Number of epochs for training.")
+parser.add_argument("-d", "--data_path", help="The path where the csv is.", default="../inputs/IMDB_Dataset.csv")
+parser.add_argument("-m", "--model_path", help="The path to save the model", default="./")
+
 
 def run(opt_level="O2", keep_batchnorm_fp32=True, batch_size=5,
-        nb_epochs=10, data_path="../inputs/IMDB_Dataset.csv"):
+        nb_epochs=10, data_path="../inputs/IMDB_Dataset.csv", model_path="./"):
     
     df = pd.read_csv(data_path).fillna("none")[0:100]
     df.sentiment = df.sentiment.apply(lambda x: 1 if x == "positive" else 0)
@@ -78,7 +87,9 @@ def run(opt_level="O2", keep_batchnorm_fp32=True, batch_size=5,
     )
     
     # Train the model
-    engine.global_trainer(train_dataloader, valid_dataloader, model, optimizer, scheduler, device, nb_epochs)
+    engine.global_trainer(train_dataloader, valid_dataloader, model, optimizer, scheduler, device, nb_epochs, model_path)
     
 if __name__ == "__main__":
-    run()
+    args = parser.parse_args()
+    run(args.opt_level, args.keep_batchnorm_fp32, args.batch_size,
+        args.nb_epochs, args.data_path, args.model_path)
